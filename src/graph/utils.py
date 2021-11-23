@@ -1,4 +1,4 @@
-from functools import reduce
+from functools import reduce, partial
 
 import networkx as nx
 
@@ -51,21 +51,19 @@ def solve_null_nodes(gin: nx.DiGraph) -> nx.DiGraph:
 
 
 def remove_null_nodes(gin: nx.DiGraph) -> nx.DiGraph:
-    g = gin.copy()
-    for label, ns in gin.adj.items():
-        for n in ns:
-            if is_node_null(gin, n) and n != last_node(gin):
-                g = shrink_path(g, label, n)
+    null_nodes_but_ending = get_null_nodes(gin)[:-1]
+    g = direct_predecessors_nodes_to_grandchildren(gin, null_nodes_but_ending)
+    g.remove_nodes_from(null_nodes_but_ending)
     return g
 
 
-def shrink_path(gin: nx.DiGraph, from_node: int, to_node: int) -> nx.DiGraph:
+def direct_predecessors_nodes_to_grandchildren(gin, null_nodes_but_ending):
     g = gin.copy()
-    edge_attrs = g.edges[(from_node, to_node)]
-    g.add_edges_from([(from_node, grand_child, edge_attrs) for grand_child in g.adj[to_node]])
-    g.remove_edge(from_node, to_node)
-    if is_node_unreachable(g, to_node):
-        g.remove_node(to_node)
+    null_nodes_pres = get_predecessors_of_nodes(gin, null_nodes_but_ending)
+    for null_node, pres in zip(null_nodes_but_ending, null_nodes_pres):
+        for pre in pres:
+            edge_attrs = g.edges[(pre, null_node)]
+            g.add_edges_from([(pre, grand_child, edge_attrs) for grand_child in gin.adj[null_node]])
     return g
 
 
@@ -77,10 +75,19 @@ def shift_node_labels(gin: nx.DiGraph, n: int) -> nx.DiGraph:
     return nx.relabel_nodes(gin, {i: i + n for i in gin.nodes})
 
 
+def get_null_nodes(gin): return list(sorted(filter(partial(is_null_node, gin), gin.nodes)))
+
+
+def get_predecessors(gin, node): return list(gin.predecessors(node))
+
+
+def get_predecessors_of_nodes(gin, nodes): return list(map(partial(get_predecessors, gin), nodes))
+
+
 def is_node_unreachable(gin: nx.DiGraph, n: int) -> bool: return gin.in_degree[n] == 0
 
 
-def is_node_null(gin: nx.DiGraph, n: int) -> bool: return gin.nodes[n]["data"] == []
+def is_null_node(gin: nx.DiGraph, n: int) -> bool: return gin.nodes[n]["data"] == []
 
 
 def compose(*graphs) -> nx.DiGraph: return reduce(lambda acc, x: nx.compose(acc, x), graphs)
