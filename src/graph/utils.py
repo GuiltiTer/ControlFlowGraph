@@ -57,13 +57,25 @@ def remove_null_nodes(gin: nx.DiGraph) -> nx.DiGraph:
     return g
 
 
+def get_last_null_chain(gin, node):
+    grand_children = list(gin.adj[node])
+    if len(grand_children) != 1:
+        return node
+
+    grand_child = grand_children[0]
+    if is_null_node(gin, grand_child):
+        return get_last_null_chain(gin, grand_child)
+
+    return grand_child
+
+
 def direct_predecessors_nodes_to_grandchildren(gin, null_nodes_but_ending):
     g = gin.copy()
     null_nodes_pres = get_predecessors_of_nodes(gin, null_nodes_but_ending)
     for null_node, pres in zip(null_nodes_but_ending, null_nodes_pres):
-        for pre in pres:
-            edge_attrs = g.edges[(pre, null_node)]
-            g.add_edges_from([(pre, grand_child, edge_attrs) for grand_child in gin.adj[null_node]])
+        g.add_edges_from([(pre,
+                           get_last_null_chain(gin, null_node),
+                           g.edges[(pre, null_node)]) for pre in pres])
     return g
 
 

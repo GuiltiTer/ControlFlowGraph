@@ -3,9 +3,8 @@ from antlr4 import CommonTokenStream
 from src.antlr.gen.CPP14_v2Parser import CPP14_v2Parser
 from src.antlr.gen.CPP14_v2Visitor import CPP14_v2Visitor
 from src.cfg_extractor.lang_structures import (embed_in_function_structure, embed_in_do_while_structure,
-                                               embed_in_for_structure,
-                                               embed_in_switch_structure, embed_in_if_structure,
-                                               embed_in_if_else_structure,
+                                               embed_in_for_structure, embed_in_switch_structure,
+                                               embed_in_if_structure, embed_in_if_else_structure,
                                                embed_in_while_structure, embed_in_try_catch_structure)
 from src.graph.utils import (build_single_node_graph, concat_graphs, build_isolated_node_graph)
 
