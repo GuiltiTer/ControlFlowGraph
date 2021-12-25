@@ -8,33 +8,58 @@ from src.graph.utils import (shift_node_labels,
                              compose, reorder_node_labels, solve_null_nodes)
 
 
-def embed_in_for_structure(gin, initializer, condition, successor):
-    g, g_cond, g_head = build_for_initial_graph(condition, initializer)
+def embed_in_conditional_for(gin, initializer, condition, successor):
+    g = nx.DiGraph()
+    g_head, g_cond = 0, 1
+    g.add_nodes_from([(g_head, {"data": [initializer] if initializer else []}),
+                      (g_cond, {"data": [condition]})])
 
     gin = shift_node_labels(gin, len(g))
     gin_head, gin_last = get_graph_label_range(gin)
     g_succ = gin_last + 1
     g_last = g_succ + 1
+
     g.add_edges_from([(g_head, g_cond),
                       (g_cond, gin_head, {"state": "True"}),
                       (g_cond, g_last, {"state": "False"}),
                       (gin_last, g_succ),
                       (g_succ, g_cond)])
 
-    g.nodes[g_succ]["data"] = [successor]
+    g.nodes[g_succ]["data"] = [successor] if successor else []
     g.nodes[g_last]["data"] = []
     g = compose(g, gin)
     g = split_on_continue(g, g_succ)
-    g = split_on_break(g)
     return g
 
 
-def build_for_initial_graph(condition, initializer):
+def embed_in_unconditional_for(gin, initializer, successor):
     g = nx.DiGraph()
-    g_head, g_cond = 0, 1
-    g.add_nodes_from([(g_head, {"data": [initializer]}),
-                      (g_cond, {"data": [condition]})])
-    return g, g_cond, g_head
+    g_head = 0
+    g.add_nodes_from([(g_head, {"data": [initializer] if initializer else []})])
+
+    gin = shift_node_labels(gin, len(g))
+    gin_head, gin_last = get_graph_label_range(gin)
+    g_succ = gin_last + 1
+    g_last = g_succ + 1
+
+    g.add_node(g_last)
+    g.add_edges_from([(g_head, gin_head), (gin_last, g_succ), (g_succ, gin_head)])
+
+    g.nodes[g_succ]["data"] = [successor] if successor else []
+    g.nodes[g_last]["data"] = []
+    g = compose(g, gin)
+    g = split_on_continue(g, g_succ)
+    return g
+
+
+def embed_in_for_structure(gin, initializer, condition, successor):
+    if condition:
+        g = embed_in_conditional_for(gin, initializer, condition, successor)
+    else:
+        g = embed_in_unconditional_for(gin, initializer, successor)
+
+    g = split_on_break(g)
+    return g
 
 
 def embed_in_do_while_structure(gin, condition):
