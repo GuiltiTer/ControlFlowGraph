@@ -1,5 +1,3 @@
-from antlr4 import CommonTokenStream
-
 from src.antlr.gen.CPP14_v2Parser import CPP14_v2Parser
 from src.antlr.gen.CPP14_v2Visitor import CPP14_v2Visitor
 from src.cfg_extractor.lang_structures import (embed_in_function_structure, embed_in_do_while_structure,
@@ -10,8 +8,18 @@ from src.graph.utils import (build_single_node_graph, concat_graphs, build_isola
 
 
 class CFGExtractorVisitor(CPP14_v2Visitor):
-    def __init__(self, common_token_stream: CommonTokenStream):
-        self.token_stream = common_token_stream
+    """
+    The class includes a method for each non-terminal (i.e., selection, iteration, jump and try-catch statements)
+    Each method builds a part of a CFG rooted at its corresponding non-terminal.
+    The extracted sub-graph is saved using the `networkx` library.
+    visit() is the first method of the class which is invoked initially by the main.
+    """
+
+    def __init__(self):
+        """
+        `functions` is a dictionary to keep each function signature and its CFG reference.
+        Each CFG is kept as a `networkx.DiGraph`.
+        """
         self.functions = {}
 
     def visitFunctiondefinition(self, ctx: CPP14_v2Parser.FunctiondefinitionContext):
