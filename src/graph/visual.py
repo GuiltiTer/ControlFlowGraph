@@ -6,20 +6,21 @@ from src.antlr.rule_utils import extract_exact_text
 from src.graph.utils import head_node, last_node
 
 FONT_SIZE = "22"
+PEN_WIDTH = "2"
 
 
-def draw_CFG(graph, filename, token_stream, format="png", verbose=True):
+def draw_CFG(graph, filename, token_stream=None, format="png", verbose=True):
     gr = gv.Digraph(comment=filename, format=format, node_attr={"shape": "none"})
     gr.node("start", style="filled", fillcolor="#aaffaa", shape="oval", fontsize=FONT_SIZE)
 
     for node, args in list(graph.nodes.data())[:-1]:
-        block_contents = (stringify_block(token_stream, args) if verbose else stringify_block_lineno_only(args))
+        block_contents = (stringify_block(args, token_stream) if verbose else stringify_block_lineno_only(args))
         gr.node(str(node), label=build_node_template(node, block_contents))
     gr.node(str(last_node(graph)), label="end", style="filled", fillcolor="#ffaaaa", shape="oval", fontsize=FONT_SIZE)
 
     for f, t, args in graph.edges.data():
-        gr.edge(f"{str(f)}", f"{str(t)}", label=args.get("state"), fontsize=FONT_SIZE)
-    gr.edge("start", str(head_node(graph)))
+        gr.edge(f"{str(f)}", f"{str(t)}", label=args.get("state"), fontsize=FONT_SIZE, penwidth=PEN_WIDTH)
+    gr.edge("start", str(head_node(graph)), penwidth=PEN_WIDTH)
 
     gr.render(f"{filename}.gv", view=True)
 
@@ -53,7 +54,8 @@ def node_content_to_html(node_contents):
     return content_list_string + delimiter
 
 
-def stringify_block(token_stream, node_args):
+def stringify_block(node_args, token_stream):
+    if node_args == []: return "[]"
     cs = [(rule.start.line, extract_exact_text(token_stream, rule)) for rule in node_args["data"]]
     b = node_content_to_html(cs)
     return b
