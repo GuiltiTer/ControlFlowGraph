@@ -23,6 +23,16 @@
           <option name="language" value="Python3" />
           <option name="generateVisitor" value="true" />
         </PerGrammarGenerationSettings>
+        <PerGrammarGenerationSettings>
+          <option name="fileName" value="$PROJECT_DIR$/grammar/CPP14_v2.g4" />
+          <option name="autoGen" value="true" />
+          <option name="outputDir" value="C:\Users\babay\projects\Master\AdvancedCompiler\CFG\src\antlr\gen" />
+          <option name="libDir" value="" />
+          <option name="encoding" value="" />
+          <option name="pkg" value="" />
+          <option name="language" value="Python3" />
+          <option name="generateVisitor" value="true" />
+        </PerGrammarGenerationSettings>
       </list>
     </option>
   </component>
